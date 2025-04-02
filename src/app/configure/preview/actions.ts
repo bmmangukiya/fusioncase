@@ -26,6 +26,14 @@ export const createCheckoutSession = async ({
     throw new Error('You need to be logged in')
   }
 
+  const existingUser = await db.user.findUnique({where:{id:user.id}})
+
+  if(!existingUser){
+    await db.user.create({data:{
+      email:user.email!,
+      id:user.id}})
+  }
+
   const { finish, material } = configuration
 
   let price = BASE_PRICE
@@ -41,8 +49,6 @@ export const createCheckoutSession = async ({
       configurationId: configuration.id,
     },
   })
-
-  console.log(user.id, configuration.id)
 
   if (existingOrder) {
     order = existingOrder
@@ -68,9 +74,9 @@ export const createCheckoutSession = async ({
   const stripeSession = await stripe.checkout.sessions.create({
     success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/thank-you?orderId=${order.id}`,
     cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/configure/preview?id=${configuration.id}`,
-    payment_method_types: ['card', 'paypal'],
+    payment_method_types: ['card'],
     mode: 'payment',
-    shipping_address_collection: { allowed_countries: ['DE', 'US'] },
+    shipping_address_collection: { allowed_countries: ['US'] },
     metadata: {
       userId: user.id,
       orderId: order.id,

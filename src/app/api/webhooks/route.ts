@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       }
 
       const billingAddress = session.customer_details!.address
-      const shippingAddress = session.shipping_details!.address
+      const shippingAddress = session.shipping_details?.address ?? billingAddress;
 
       const updatedOrder = await db.order.update({
         where: {
